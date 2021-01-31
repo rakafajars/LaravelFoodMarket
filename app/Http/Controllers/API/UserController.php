@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    use PasswordValidationRules
+    use PasswordValidationRules;
 
     public function login(Request $request)
     {
@@ -60,35 +60,41 @@ class UserController extends Controller
             $request->validate([
                 'name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-                'password'=> $this->passwordRules()
+                'password' => $this->passwordRules()
             ]);
 
             User::create([
-                    'name'=> $request->name,
-                    'email'=> $request->email,
-                    'password'=> Hash::make($request->password),
-                    'address'=> $request->address,
-                    'house_number'=> $request->house_number,
-                    'phone_number'=> $request->phone_number,
-                    'city'=> $request->city,
-                    'roles'=> $request->roles,
-                ]);
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'address' => $request->address,
+                'house_number' => $request->house_number,
+                'phone_number' => $request->phone_number,
+                'city' => $request->city,
+                'roles' => $request->roles,
+            ]);
 
-             $user = User::where('email',$request->email)->first();
+            $user = User::where('email', $request->email)->first();
 
-             $tokenResult= $user->createToken('authToken')->plainTextToken;
+            $tokenResult = $user->createToken('authToken')->plainTextToken;
 
-             return ResponseFormatter::success([
+            return ResponseFormatter::success([
                 'access_token' => $tokenResult,
                 'token_type' => 'Bearer',
-                'user' =>$user,
-             ]);
-
+                'user' => $user,
+            ]);
         } catch (Exception $error) {
             return ResponseFormatter::error([
-                'message'=> 'Something went wrong',
-                'error'=>$error
-            ],'Authentication Failed', 500);
+                'message' => 'Something went wrong',
+                'error' => $error
+            ], 'Authentication Failed', 500);
         }
+    }
+
+    public function logOut(Request $request)
+    {
+        $token = $request->user()->currentAccessToken()->delete();
+
+        return ResponseFormatter::success($token, 'Token Revoked');
     }
 }
